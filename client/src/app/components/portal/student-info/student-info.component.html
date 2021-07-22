@@ -1,0 +1,18 @@
+<div class="lg:w-72 md:border-r">
+    <div class="p-4">
+        <p class="text-xl font-bold capitalize">itumeleng onalerona tsoela</p>
+        <p class="text-xl font-bold capitalize">Student ID: 111111</p>
+        <p class="text-sm">Curent year: 2021 <a class="text-red-500" href="#">(change)</a></p>
+        <div class="grid grid-cols-2 gap-1 pt-2">
+            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
+            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
+            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
+        </div>
+    </div>
+    <ng-container *ngFor="let container of studentPortalLinks">
+        <app-link-heading (toggle-heading)="onToggleEvent(container.title)" button-symbol-open="{{container.isLinkOpen ? '-' : '+'}}" title-placeholder="{{container.title}}"></app-link-heading>
+        <app-link-wrapper *ngIf="container.isLinkOpen">
+            <app-link-item *ngFor="let button of container.links" title-placeholder="{{button.title}}" link-placeholder="{{button.link}}"></app-link-item>
+        </app-link-wrapper>
+    </ng-container>
+</div>
