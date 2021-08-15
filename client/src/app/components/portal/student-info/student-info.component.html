@@ -1,12 +1,15 @@
-<div class="lg:w-72 md:border-r">
+<div class="lg:w-72 ">
     <div class="p-4">
-        <p class="text-xl font-bold capitalize">itumeleng onalerona tsoela</p>
+        <p class="text-xl font-bold capitalize">Itumeleng Doe</p>
         <p class="text-xl font-bold capitalize">Student ID: 111111</p>
-        <p class="text-sm">Curent year: 2021 <a class="text-red-500" href="#">(change)</a></p>
+        <div class="flex items-center">
+            <p class="text-sm">Curent year: 2021</p>
+            <app-select></app-select>
+        </div>
         <div class="grid grid-cols-2 gap-1 pt-2">
-            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
-            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
-            <a class="text-white text-sm bg-red-500 py-2 px-4 rounded-sm shadow-sm" href="#">Edit Details</a>
+            <a class="text-white text-xs bg-red-500 py-2 px-4 rounded-sm shadow-sm" routerLink="/my_profile">Edit Details</a>
+            <a class="text-white text-xs bg-red-500 py-2 px-4 rounded-sm shadow-sm" routerLink="/reset_passwrd">Reset Password</a>
+            <a class="text-white text-xs bg-red-500 py-2 px-4 rounded-sm shadow-sm" routerLink="/login">Logout</a>
         </div>
     </div>
     <ng-container *ngFor="let container of studentPortalLinks">

@@ -1,5 +1,5 @@
-<div class="bg-gray-100 min-h-screen relative">
-    <header class="border-b border-gray-200">
+<div class="bg-gray-100 min-h-screen relative overflow-hidden ">
+    <header *ngIf="filterOtherComponents()" class="border-b border-gray-200">
         <div class="p-4 bg-red-600 border-b relative flex items-center justify-center">
             <button (click)="toggleMenu()" class="lg:hidden absolute left-4">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#fff"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
@@ -11,12 +11,18 @@
             <p class="text-xs text-gray-700 font-medium">{{ getCurrentDate() | date: 'fullDate'}}</p>
         </div>
     </header>
-    <main class="lg:flex relative bg-black w-full">
-        <div *ngIf="profileMenu && authenticated" (click)="toggleMenu()" class="absolute hidden md:block lg:hidden bg-black opacity-70 blur-3xl z-10 w-full bottom-0 top-0"></div>
-        <app-student-info *ngIf="authenticated" class="md:absolute md:z-20 md:bg-gray-100 lg:block lg:relative" [ngClass]="profileMenu ? '' : 'hidden'"></app-student-info>
-        <router-outlet></router-outlet>
-    </main>
+    <section class="lg:flex">
+        <app-student-info *ngIf="filterOtherComponents()" class="lg:block" [ngClass]="profileMenu ? 'block' : 'hidden'"></app-student-info>
+        <main class="flex-grow md:border-l">
+            <div class="bg-red-600 p-2 border-2 border-white" *ngIf="hideOnHome()">
+                <h1 class="text-white shadow-sm text-center capitalize">{{getCuurentRoute()}}</h1>
+            </div>
+            <router-outlet ></router-outlet>
+        </main>
+    </section>
 </div>
 <footer class="p-6 text-center border-t">
     <p class="text-xs">@Fakename College Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod provident et numquam blanditiis praesentium tempore, optio totam quasi eius quos laboriosam. Natus, facere neque ad cum corporis numquam ipsa amet</p>
 </footer>
+
+

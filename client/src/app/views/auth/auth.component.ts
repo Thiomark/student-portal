@@ -13,3 +13,16 @@ export class LoginComponent implements OnInit {
   }
 
 }
+
+@Component({
+  selector: 'app-resetpassword',
+  templateUrl: './resetpassword.component.html'
+})
+export class ResetPasswordComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}

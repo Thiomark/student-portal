@@ -1,0 +1,12 @@
+<div class="relative inline-block text-left">
+  <div>
+    <button type="button" (click)="toggleMenu()" class="inline-flex justify-center w-full px-4 py-2 text-sm text-gray-700 focus:outline-none " id="menu-button" aria-expanded="true" aria-haspopup="true">
+      (Change)
+    </button>
+  </div>
+  <div *ngIf="isMenuOn" class="absolute left-0 focus:outline-none mt-1 w-40 rounded-sm shadow-md bg-white ring-1 ring-black ring-opacity-5" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+    <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">2020</a>
+    <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">2021</a>
+    <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">2019</a>
+  </div>
+</div>

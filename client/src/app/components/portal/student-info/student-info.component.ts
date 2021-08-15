@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
+import { PortalService } from 'src/app/services/portal.service';
 
 @Component({
     selector: 'app-student-info',
@@ -6,8 +7,9 @@ import { Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
     styleUrls: ['./student-info.component.scss']
 })
 export class StudentInfoComponent implements OnInit {
+  currentUser: any = null
 
-  constructor() { }
+  constructor(private portal: PortalService) { }
 
   studentPortalLinks: any [] = [
     {
@@ -18,7 +20,7 @@ export class StudentInfoComponent implements OnInit {
           title: "Home", link: "/"
         },
         {
-          title: "Calender (0)", link: "/dd"
+          title: "Calender (0)", link: "/calender"
         },
         {
           title: "Document Tracking", link: "#"
@@ -45,7 +47,7 @@ export class StudentInfoComponent implements OnInit {
       isLinkOpen: true,
       links: [
         {
-          title: "My Modules", link: "#"
+          title: "My Modules", link: "/my_modules"
         }
       ] 
     },
@@ -90,6 +92,10 @@ export class StudentInfoComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // this.portal.fetch('user')
+    // .subscribe((response: any) => {
+    //   this.currentUser = response.rows[0]
+    // })
   }
 }
 

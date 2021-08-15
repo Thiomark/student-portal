@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -6,6 +7,29 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  router: string;
+  currentRoute: string = ''
+  constructor(private _router: Router){
+    this.router = _router.url; 
+  }
+
+  filterOtherComponents(){
+    if(this._router.url === '/login') return false;
+    return true
+  }
+  
+  hideOnHome(){
+    if(this._router.url === '/') return false;
+    else if(this._router.url === '/login') return false;
+    return true
+  }
+
+  getCuurentRoute(){
+    return this.currentRoute = this._router.url.replace('/', '').replace('_', ' ')
+  }
+
+  //Route Name
+
   title = 'student-hub';
 
   profileMenu: boolean = false;
@@ -19,4 +43,5 @@ export class AppComponent {
   getCurrentDate(){
     return new Date();
   }
+  
 }

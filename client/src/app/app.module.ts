@@ -8,7 +8,13 @@ import { PortalComponent } from './views/portal/portal.component';
 import { MyModulesComponent } from './components/portal/my-modules/my-modules.component';
 import { LinkItemComponent, StudentInfoComponent, LinkHeadingComponent, LinkContainerComponent } from './components/portal/student-info/student-info.component';
 import { TimeTableComponent } from './views/time-table/time-table.component';
-import { LoginComponent } from './views/auth/auth.component';
+import { LoginComponent, ResetPasswordComponent } from './views/auth/auth.component';
+import { HttpClientModule } from '@angular/common/http';
+import { SelectComponent } from './components/portal/select/select.component';
+import { InputShortComponent, MyprofileComponent } from './views/myprofile/myprofile.component';
+import { MymodulesComponent } from './views/mymodules/mymodules.component';
+import { ModuleComponent } from './views/module/module.component';
+import { CalenderComponent } from './views/calender/calender.component';
 
 @NgModule({
   declarations: [
@@ -21,11 +27,19 @@ import { LoginComponent } from './views/auth/auth.component';
     LinkHeadingComponent,
     LinkContainerComponent,
     TimeTableComponent,
-    LoginComponent
+    LoginComponent,
+    SelectComponent,
+    MyprofileComponent,
+    InputShortComponent,
+    ResetPasswordComponent,
+    MymodulesComponent,
+    ModuleComponent,
+    CalenderComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
