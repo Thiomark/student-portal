@@ -32,7 +32,8 @@ phase is meant to be usable on its own.
   automatically instead of becoming office to-dos.
 - **Year-end rollover**: promote classes to the next grade and carry
   outstanding textbook loans into the new year.
-- **CSV import** of learners and parents from SA-SAMS exports.
+- ~~**CSV import**~~: done. Learners and parents from a spreadsheet, with a
+  preview, re-import updates in place, and siblings share parents.
 - **Parent portal actions**: confirm meetings, give trip consent, update
   contact details (as a request staff approve).
 - Move more modules to the offline outbox (incidents, trip payments), reusing

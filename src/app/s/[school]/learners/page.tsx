@@ -33,9 +33,16 @@ export default async function LearnersPage({ params, searchParams }: PageProps<"
         title="Learners"
         actions={
           can(ctx, "learners.manage") ? (
-            <Link href={`${base}/new`} className="btn-primary">
-              Add learner
-            </Link>
+            <>
+              {can(ctx, "guardians.manage") ? (
+                <Link href={`${base}/import`} className="btn-secondary">
+                  Import from spreadsheet
+                </Link>
+              ) : null}
+              <Link href={`${base}/new`} className="btn-primary">
+                Add learner
+              </Link>
+            </>
           ) : null
         }
       />
