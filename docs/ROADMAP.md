@@ -30,8 +30,9 @@ phase is meant to be usable on its own.
   meeting) in one tap.
 - **SMS provider** (e.g. BulkSMS or Clickatell) so `sms` routes send
   automatically instead of becoming office to-dos.
-- **Year-end rollover**: promote classes to the next grade and carry
-  outstanding textbook loans into the new year.
+- ~~**Year-end rollover**~~: done. Moves classes up a grade, handles
+  repeaters and graduates, and makes the new year current. Textbook loans
+  stay open with the learner.
 - ~~**CSV import**~~: done. Learners and parents from a spreadsheet, with a
   preview, re-import updates in place, and siblings share parents.
 - **Parent portal actions**: confirm meetings, give trip consent, update

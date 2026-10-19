@@ -5,6 +5,7 @@ const TABS = [
   { href: "/years", label: "Academic years" },
   { href: "/grades", label: "Grades" },
   { href: "/subjects", label: "Subjects" },
+  { href: "/rollover", label: "Year-end rollover" },
 ] as const;
 
 // Tabs across the academic setup pages. Server-rendered; the current tab is

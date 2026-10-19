@@ -96,6 +96,7 @@ export async function listClassesForYear(schoolId: string, yearId: string) {
       id: classGroups.id,
       name: classGroups.name,
       room: classGroups.room,
+      gradeId: classGroups.gradeId,
       gradeName: grades.name,
       teacherTitle: staff.title,
       teacherFirstName: staff.firstName,
