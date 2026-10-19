@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -68,6 +69,11 @@ export const meetingAttendees = pgTable(
 
 // Every notice sent, or that needs sending by hand. "letter" and "call" rows
 // are work items for the office: print it, or phone the number.
+//
+// WhatsApp and email rows are a queue: "queued" until the delivery worker
+// (lib/messaging/delivery.ts) claims them as "sending", then "sent", and later
+// "delivered"/"read" as Whaple reports back. Temporary provider errors go back
+// to "queued" with a later next_attempt_at.
 export const messages = pgTable(
   "messages",
   {
@@ -79,13 +85,19 @@ export const messages = pgTable(
     subject: text("subject"),
     body: text("body").notNull(),
     status: text("status", {
-      enum: ["queued", "sent", "delivered", "read", "failed", "needs_action", "done"],
+      enum: ["queued", "sending", "sent", "delivered", "read", "failed", "needs_action", "done"],
     })
       .notNull()
       .default("queued"),
     provider: text("provider"),
     providerMessageId: text("provider_message_id"),
     error: text("error"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    statusCheckedAt: timestamp("status_checked_at", { withTimezone: true }),
     relatedType: text("related_type"),
     relatedId: uuid("related_id"),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
@@ -96,6 +108,9 @@ export const messages = pgTable(
     index("messages_school_created_idx").on(t.schoolId, t.createdAt),
     index("messages_related_idx").on(t.relatedType, t.relatedId),
     index("messages_status_idx").on(t.schoolId, t.status),
+    // What the delivery worker scans for.
+    index("messages_queue_idx").on(t.nextAttemptAt).where(sql`${t.status} = 'queued'`),
+    index("messages_tracking_idx").on(t.sentAt).where(sql`${t.status} in ('sent', 'delivered')`),
   ],
 );
 

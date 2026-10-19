@@ -2,18 +2,39 @@ import { z } from "zod";
 
 // Shared by server actions and forms.
 
-export const MESSAGE_STATUSES = ["needs_action", "failed", "queued", "sent", "delivered", "read", "done"] as const;
+export const MESSAGE_STATUSES = [
+  "needs_action",
+  "failed",
+  "queued",
+  "sending",
+  "sent",
+  "delivered",
+  "read",
+  "done",
+] as const;
 export type MessageStatus = (typeof MESSAGE_STATUSES)[number];
 
 export const MESSAGE_STATUS_LABELS: Record<MessageStatus, string> = {
   needs_action: "Needs action",
   failed: "Failed",
-  queued: "Queued",
+  queued: "Waiting to send",
+  sending: "Sending",
   sent: "Sent",
   delivered: "Delivered",
   read: "Read",
   done: "Done",
 };
+
+export const MESSAGE_STATUS_TONES = {
+  needs_action: "amber",
+  failed: "red",
+  queued: "gray",
+  sending: "blue",
+  sent: "green",
+  delivered: "green",
+  read: "green",
+  done: "gray",
+} as const satisfies Record<MessageStatus, string>;
 
 export const AUDIENCES = ["class", "grade", "all"] as const;
 export type Audience = (typeof AUDIENCES)[number];

@@ -6,19 +6,9 @@ import { can, getSchoolContext } from "@/lib/auth/context";
 import { formatDateTime } from "@/lib/format";
 import { isUuid } from "@/lib/ids";
 import { CHANNEL_LABELS } from "@/lib/messaging/channel";
-import { MESSAGE_STATUS_LABELS } from "@/lib/validation/messages";
+import { MESSAGE_STATUS_LABELS, MESSAGE_STATUS_TONES } from "@/lib/validation/messages";
 import { getMessage, guardianName, listDialableContacts } from "@/server/messages";
 import { markMessageDone, retryMessage } from "../actions";
-
-const TONE = {
-  queued: "gray",
-  sent: "green",
-  delivered: "green",
-  read: "green",
-  failed: "red",
-  needs_action: "amber",
-  done: "gray",
-} as const;
 
 export default async function MessagePage({ params }: PageProps<"/s/[school]/messages/[messageId]">) {
   const { school: slug, messageId } = await params;
@@ -46,7 +36,7 @@ export default async function MessagePage({ params }: PageProps<"/s/[school]/mes
         description={
           <>
             {CHANNEL_LABELS[message.channel]} ·{" "}
-            <Badge tone={TONE[message.status]}>{MESSAGE_STATUS_LABELS[message.status]}</Badge>
+            <Badge tone={MESSAGE_STATUS_TONES[message.status]}>{MESSAGE_STATUS_LABELS[message.status]}</Badge>
           </>
         }
         back={{ href: `${base}/messages`, label: "Messages" }}
@@ -131,6 +121,18 @@ export default async function MessagePage({ params }: PageProps<"/s/[school]/mes
             ["Channel", CHANNEL_LABELS[message.channel]],
             ["Created", formatDateTime(message.createdAt, tz)],
             ["Sent", message.sentAt ? formatDateTime(message.sentAt, tz) : null],
+            ["Delivered", message.deliveredAt ? formatDateTime(message.deliveredAt, tz) : null],
+            ["Read", message.readAt ? formatDateTime(message.readAt, tz) : null],
+            [
+              "Attempts",
+              message.attempts > 0
+                ? `${message.attempts}${
+                    message.status === "queued" && message.nextAttemptAt
+                      ? ` · trying again ${formatDateTime(message.nextAttemptAt, tz)}`
+                      : ""
+                  }`
+                : null,
+            ],
             ["Error", message.error],
             [
               "About",

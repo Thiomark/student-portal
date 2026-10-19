@@ -445,9 +445,9 @@ async function requireStaff(schoolId: string, staffId: string) {
   if (!row) throw new UserFacingError("Organiser not found.");
 }
 
-type NotifySummary = { sent: number; failed: number; needsAction: number; error?: boolean };
+type NotifySummary = { queued: number; needsAction: number; error?: boolean };
 
-// Sends after the write has committed. A provider or database hiccup here is
+// Queues notices after the write has committed. A database hiccup here is
 // reported in the summary rather than failing an action that already saved.
 async function notify(
   ctx: SchoolContext,
@@ -466,11 +466,10 @@ async function notify(
     });
   } catch (err) {
     console.error("[meetings] notify failed", err);
-    return { sent: 0, failed: 0, needsAction: 0, error: true };
+    return { queued: 0, needsAction: 0, error: true };
   }
   return {
-    sent: outcomes.filter((o) => o.status === "sent").length,
-    failed: outcomes.filter((o) => o.status === "failed").length,
+    queued: outcomes.filter((o) => o.status === "queued").length,
     needsAction: outcomes.filter((o) => o.status === "needs_action").length,
   };
 }

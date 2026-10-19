@@ -2,10 +2,8 @@ import "server-only";
 import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import type { SchoolContext } from "@/lib/auth/context";
-import { decryptSecret } from "@/lib/crypto";
 import { chooseRoute, type Channel } from "@/lib/messaging/channel";
-import { sendEmail } from "@/lib/messaging/email";
-import { sendWhatsApp } from "@/lib/messaging/whaple";
+import { deliverQueued } from "@/lib/messaging/delivery";
 import type { AudienceInput, MessageStatus } from "@/lib/validation/messages";
 import { getCurrentYear, PAGE_SIZE } from "@/server/school-data";
 
@@ -265,41 +263,28 @@ export type ResendResult = { ok: true } | { ok: false; error: string };
 
 // Re-sends one failed WhatsApp or email message over the same channel, to the
 // guardian's current contact for it (the number may have been corrected since
-// the first attempt). Claims the row first so a double click can't send twice.
+// the first attempt). The row goes back through the delivery queue, so a
+// double click can't send twice.
 export async function resendMessage(ctx: SchoolContext, messageId: string): Promise<ResendResult> {
   const db = getDb();
   const schoolId = ctx.school.id;
-  const [claimed] = await db
-    .update(messages)
-    .set({ status: "queued", error: null })
-    .where(
-      and(
-        eq(messages.schoolId, schoolId),
-        eq(messages.id, messageId),
-        eq(messages.status, "failed"),
-        inArray(messages.channel, ["whatsapp", "email"]),
-      ),
-    )
-    .returning();
-  if (!claimed) return { ok: false, error: "Only failed WhatsApp or email messages can be retried." };
+  const [current] = await db
+    .select()
+    .from(messages)
+    .where(and(eq(messages.schoolId, schoolId), eq(messages.id, messageId)));
+  if (!current || current.status !== "failed" || !["whatsapp", "email"].includes(current.channel)) {
+    return { ok: false, error: "Only failed WhatsApp or email messages can be retried." };
+  }
 
-  const fail = async (error: string): Promise<ResendResult> => {
-    await db
-      .update(messages)
-      .set({ status: "failed", error: error.slice(0, 500) })
-      .where(and(eq(messages.schoolId, schoolId), eq(messages.id, messageId)));
-    return { ok: false, error };
-  };
-
-  const channel = claimed.channel as "whatsapp" | "email";
-  const contacts = claimed.guardianId
+  const channel = current.channel as "whatsapp" | "email";
+  const contacts = current.guardianId
     ? await db
         .select()
         .from(guardianContacts)
         .where(
           and(
             eq(guardianContacts.schoolId, schoolId),
-            eq(guardianContacts.guardianId, claimed.guardianId),
+            eq(guardianContacts.guardianId, current.guardianId),
             isNull(guardianContacts.deletedAt),
           ),
         )
@@ -307,45 +292,28 @@ export async function resendMessage(ctx: SchoolContext, messageId: string): Prom
   const usable = contacts
     .filter((c) => (channel === "whatsapp" ? c.kind === "phone" && c.whatsapp : c.kind === "email"))
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
-  const recipient = usable.find((c) => c.value === claimed.recipient)?.value ?? usable[0]?.value;
+  const recipient = usable.find((c) => c.value === current.recipient)?.value ?? usable[0]?.value;
   if (!recipient) {
-    return fail(channel === "whatsapp" ? "No WhatsApp number on file any more." : "No email address on file any more.");
+    return {
+      ok: false,
+      error: channel === "whatsapp" ? "No WhatsApp number on file any more." : "No email address on file any more.",
+    };
   }
 
-  const [secrets] = await db.select().from(schoolSecrets).where(eq(schoolSecrets.schoolId, schoolId)).limit(1);
-  let result;
-  try {
-    if (channel === "whatsapp") {
-      const key = decryptSecret(secrets?.whapleApiKey);
-      if (!key) return fail("WhatsApp (Whaple) is not set up for this school.");
-      result = await sendWhatsApp(key, recipient, `*${claimed.subject ?? ""}*\n\n${claimed.body}`);
-    } else {
-      result = await sendEmail({
-        schoolName: ctx.school.name,
-        schoolApiKey: decryptSecret(secrets?.resendApiKey),
-        schoolFromEmail: secrets?.resendFromEmail,
-        replyTo: ctx.school.email,
-        to: recipient,
-        subject: claimed.subject ?? ctx.school.name,
-        text: claimed.body,
-      });
-    }
-  } catch (err) {
-    console.error("[messages] retry failed", err);
-    return fail(err instanceof Error ? err.message : "Could not send");
-  }
-
-  if (!result.ok) return fail(result.error);
-  await db
+  const [requeued] = await db
     .update(messages)
-    .set({
-      status: "sent",
-      sentAt: new Date(),
-      recipient,
-      error: null,
-      provider: channel === "whatsapp" ? "whaple" : "resend",
-      providerMessageId: result.messageId ?? null,
-    })
-    .where(and(eq(messages.schoolId, schoolId), eq(messages.id, messageId)));
-  return { ok: true };
+    .set({ status: "queued", recipient, error: null, attempts: 0, nextAttemptAt: null })
+    .where(and(eq(messages.schoolId, schoolId), eq(messages.id, messageId), eq(messages.status, "failed")))
+    .returning({ id: messages.id });
+  if (!requeued) return { ok: false, error: "This message is already being retried." };
+
+  // Send now so the person pressing Retry sees the result.
+  await deliverQueued({ schoolId, messageIds: [messageId], budgetMs: 20_000 });
+  const [after] = await db
+    .select({ status: messages.status, error: messages.error })
+    .from(messages)
+    .where(eq(messages.id, messageId));
+  if (after?.status === "sent") return { ok: true };
+  if (after?.status === "queued") return { ok: false, error: `Will try again shortly (${after.error ?? "temporary error"})` };
+  return { ok: false, error: after?.error ?? "Could not send" };
 }

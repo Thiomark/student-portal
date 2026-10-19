@@ -101,8 +101,7 @@ export async function sendBroadcast(slug: string, _prev: FormState, form: FormDa
     for (const o of outcomes) byChannel[o.channel] = (byChannel[o.channel] ?? 0) + 1;
     const counts = {
       guardians: outcomes.length,
-      sent: outcomes.filter((o) => o.status === "sent").length,
-      failed: outcomes.filter((o) => o.status === "failed").length,
+      queued: outcomes.filter((o) => o.status === "queued").length,
       needsAction: outcomes.filter((o) => o.status === "needs_action").length,
     };
     await recordActivity(ctx, {

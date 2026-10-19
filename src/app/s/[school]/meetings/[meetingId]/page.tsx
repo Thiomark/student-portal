@@ -7,7 +7,7 @@ import { formatDateTime, fullName, toLocalInput } from "@/lib/format";
 import { isUuid } from "@/lib/ids";
 import { CHANNEL_LABELS } from "@/lib/messaging/channel";
 import { MEETING_MODE_LABELS, MEETING_STATUS_LABELS } from "@/lib/validation/meetings";
-import { MESSAGE_STATUS_LABELS } from "@/lib/validation/messages";
+import { MESSAGE_STATUS_LABELS, MESSAGE_STATUS_TONES } from "@/lib/validation/messages";
 import {
   formatMeetingWhen,
   getMeeting,
@@ -19,16 +19,6 @@ import { cancelMeeting, markNoShow, rescheduleMeeting, saveMinutes, setAttendeeR
 
 const STATUS_TONE = { scheduled: "blue", completed: "green", cancelled: "gray", no_show: "red" } as const;
 const RESPONSE_TONE = { pending: "amber", accepted: "green", declined: "red" } as const;
-const MESSAGE_TONE = {
-  queued: "gray",
-  sent: "green",
-  delivered: "green",
-  read: "green",
-  failed: "red",
-  needs_action: "amber",
-  done: "gray",
-} as const;
-
 export default async function MeetingPage({ params }: PageProps<"/s/[school]/meetings/[meetingId]">) {
   const { school: slug, meetingId } = await params;
   const ctx = await getSchoolContext(slug);
@@ -230,7 +220,7 @@ export default async function MeetingPage({ params }: PageProps<"/s/[school]/mee
                     </td>
                     <td>{CHANNEL_LABELS[m.channel]}</td>
                     <td>
-                      <Badge tone={MESSAGE_TONE[m.status]}>{MESSAGE_STATUS_LABELS[m.status]}</Badge>
+                      <Badge tone={MESSAGE_STATUS_TONES[m.status]}>{MESSAGE_STATUS_LABELS[m.status]}</Badge>
                       {m.status === "needs_action" ? (
                         <span className="block text-xs text-amber-800">
                           {m.channel === "letter" ? "Print a letter" : m.channel === "call" ? "Phone the parent" : "Send by hand"}

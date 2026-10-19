@@ -8,6 +8,8 @@ const isPublic = createRouteMatcher([
   "/offline",
   "/manifest.webmanifest",
   "/sw.js",
+  // Authenticated with CRON_SECRET, not a user session.
+  "/api/cron/(.*)",
 ]);
 
 // Signs people in at the edge. What they may see inside a school is decided

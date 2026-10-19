@@ -62,6 +62,30 @@ users (one per Clerk identity)
 - WhatsApp and email go out automatically. SMS (no provider yet), calls and
   letters become `needs_action` messages for the office to work through.
 
+### Delivery queue
+
+`notifyGuardians` only writes rows; nothing waits on WhatsApp or email.
+
+1. WhatsApp and email rows are saved as `queued`. The action returns at once.
+2. `after()` starts the worker (`src/lib/messaging/delivery.ts`) once the
+   response has gone out. It sends five at a time within a 45-second budget.
+3. Any rows left over go to `GET /api/cron/messages`. Vercel Cron calls it
+   every 5 minutes (`vercel.json`) with `CRON_SECRET`. It also:
+   - sends retries that are due;
+   - puts rows stuck in `sending` for 10+ minutes back in the queue;
+   - asks Whaple about recent WhatsApps and records `delivered` and `read`
+     (Whaple has no webhooks).
+4. Workers claim rows with `FOR UPDATE SKIP LOCKED`, so the `after()` run and
+   the cron can overlap without sending anything twice.
+5. Temporary errors go back to `queued` with backoff: 1 min, 5 min, 30 min,
+   2 h. Temporary means network failures, 429s, 5xx, or the school's WhatsApp
+   phone being offline. After 5 attempts the row becomes `failed`.
+6. Permanent errors (bad number, invalid key) fail at once.
+7. Email uses the message id as Resend's idempotency key.
+
+On Vercel's Hobby plan, cron runs at most daily. Use Pro, or point any
+external scheduler at the endpoint.
+
 ## Activity log
 
 Every mutation calls `recordActivity` after it commits. Each entry records

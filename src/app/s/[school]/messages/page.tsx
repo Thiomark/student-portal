@@ -4,23 +4,13 @@ import { can, getSchoolContext } from "@/lib/auth/context";
 import { formatDateTime } from "@/lib/format";
 import { isUuid } from "@/lib/ids";
 import { CHANNEL_LABELS, type Channel } from "@/lib/messaging/channel";
-import { MESSAGE_STATUSES, MESSAGE_STATUS_LABELS, type MessageStatus } from "@/lib/validation/messages";
+import { MESSAGE_STATUSES, MESSAGE_STATUS_LABELS, MESSAGE_STATUS_TONES, type MessageStatus } from "@/lib/validation/messages";
 import { countMessagesByStatus, guardianName, listDialableContacts, listMessages } from "@/server/messages";
 import { markMessageDoneForm } from "./actions";
 
 export const metadata = { title: "Messages" };
 
 const CHANNELS = Object.keys(CHANNEL_LABELS) as Channel[];
-const TONE = {
-  queued: "gray",
-  sent: "green",
-  delivered: "green",
-  read: "green",
-  failed: "red",
-  needs_action: "amber",
-  done: "gray",
-} as const;
-
 export default async function MessagesPage({ params, searchParams }: PageProps<"/s/[school]/messages">) {
   const { school: slug } = await params;
   const sp = await searchParams;
@@ -164,7 +154,7 @@ export default async function MessagesPage({ params, searchParams }: PageProps<"
                     </td>
                     <td>{CHANNEL_LABELS[m.channel]}</td>
                     <td>
-                      <Badge tone={TONE[m.status]}>{MESSAGE_STATUS_LABELS[m.status]}</Badge>
+                      <Badge tone={MESSAGE_STATUS_TONES[m.status]}>{MESSAGE_STATUS_LABELS[m.status]}</Badge>
                       {m.status === "failed" && m.error ? (
                         <span className="block max-w-xs truncate text-xs text-red-700" title={m.error}>
                           {m.error}

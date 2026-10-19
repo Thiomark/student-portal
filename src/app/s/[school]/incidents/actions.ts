@@ -201,9 +201,8 @@ export async function notifyIncidentGuardians(
       .where(and(eq(incidents.schoolId, ctx.school.id), eq(incidents.id, incidentId)));
 
     const tally = {
-      sent: outcomes.filter((o) => o.status === "sent").length,
+      queued: outcomes.filter((o) => o.status === "queued").length,
       needsAction: outcomes.filter((o) => o.status === "needs_action").length,
-      failed: outcomes.filter((o) => o.status === "failed").length,
     };
     await recordActivity(ctx, {
       action: "incidents.guardians_notified",
@@ -216,11 +215,10 @@ export async function notifyIncidentGuardians(
   });
   if (!result.ok) return result;
   revalidatePath(`/s/${slug}/incidents/${incidentId}`);
-  const { sent, needsAction, failed } = result.data;
+  const { queued, needsAction } = result.data;
   const parts = [
-    sent ? `${sent} sent` : null,
+    queued ? `${queued} sending by WhatsApp or email` : null,
     needsAction ? `${needsAction} left for the office (call or letter)` : null,
-    failed ? `${failed} failed` : null,
   ].filter(Boolean);
   return { ok: true, message: `Parents notified: ${parts.join(", ")}.` };
 }

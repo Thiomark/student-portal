@@ -442,7 +442,7 @@ export async function remindUnpaid(slug: string, tripId: string): Promise<FormSt
 
     const tz = ctx.school.timezone;
     const currency = ctx.school.currency;
-    const tally = { learners: 0, guardians: 0, sent: 0, needsAction: 0, failed: 0, noGuardian: 0 };
+    const tally = { learners: 0, guardians: 0, queued: 0, needsAction: 0, noGuardian: 0 };
     for (const p of owing) {
       const guardianIds = links.filter((l) => l.learnerId === p.learnerId).map((l) => l.guardianId);
       if (guardianIds.length === 0) {
@@ -465,9 +465,8 @@ export async function remindUnpaid(slug: string, tripId: string): Promise<FormSt
       tally.learners++;
       tally.guardians += outcomes.length;
       for (const o of outcomes) {
-        if (o.status === "sent") tally.sent++;
-        else if (o.status === "needs_action") tally.needsAction++;
-        else tally.failed++;
+        if (o.status === "queued") tally.queued++;
+        else tally.needsAction++;
       }
     }
 
@@ -485,9 +484,8 @@ export async function remindUnpaid(slug: string, tripId: string): Promise<FormSt
   const t = result.data;
   const parts = [
     `${t.guardians} parent${t.guardians === 1 ? "" : "s"} of ${t.learners} learner${t.learners === 1 ? "" : "s"}`,
-    t.sent ? `${t.sent} sent` : null,
+    t.queued ? `${t.queued} sending by WhatsApp or email` : null,
     t.needsAction ? `${t.needsAction} left for the office` : null,
-    t.failed ? `${t.failed} failed` : null,
     t.noGuardian ? `${t.noGuardian} learner${t.noGuardian === 1 ? " has" : "s have"} no parent to notify` : null,
   ].filter(Boolean);
   return { ok: true, message: `Reminders: ${parts.join(", ")}.` };

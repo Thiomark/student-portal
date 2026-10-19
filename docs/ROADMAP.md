@@ -23,9 +23,10 @@ phase is meant to be usable on its own.
 
 - **Attendance**: daily register per class, offline like the desk. Absence
   alerts to parents via the existing notify pipeline.
-- **WhatsApp replies**: Whaple has no webhooks today, so poll message status
-  and record delivered/read on `messages`. Let staff log a parent's reply
-  (confirm/decline a meeting) in one tap.
+- ~~**Message delivery queue**~~: done. Background sending, retries,
+  WhatsApp delivered/read tracking.
+- **WhatsApp replies**: let staff log a parent's reply (confirm/decline a
+  meeting) in one tap.
 - **SMS provider** (e.g. BulkSMS or Clickatell) so `sms` routes send
   automatically instead of becoming office to-dos.
 - **Year-end rollover**: promote classes to the next grade and carry

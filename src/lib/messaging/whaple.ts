@@ -6,7 +6,9 @@ import "server-only";
 
 export type WhapleResult =
   | { ok: true; messageId?: string; status?: string }
-  | { ok: false; error: string; messageId?: string; status?: string };
+  // retryable: worth trying again later (network, rate limit, Whaple down, or
+  // the school's WhatsApp phone briefly disconnected).
+  | { ok: false; error: string; retryable: boolean; messageId?: string; status?: string };
 
 function baseUrl(): string {
   const url = process.env.WHAPLE_API_URL;
@@ -25,7 +27,7 @@ export async function sendWhatsApp(apiKey: string, number: string, message: stri
       signal: AbortSignal.timeout(15_000),
     });
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Network error" };
+    return { ok: false, error: err instanceof Error ? err.message : "Network error", retryable: true };
   }
 
   const body = (await response.json().catch(() => null)) as {
@@ -41,6 +43,7 @@ export async function sendWhatsApp(apiKey: string, number: string, message: stri
   return {
     ok: false,
     error: body?.error ?? (typeof body?.message === "string" ? body.message : `HTTP ${response.status}`),
+    retryable: response.status === 429 || response.status >= 500,
     messageId: tracked?.id,
     status: tracked?.status,
   };
