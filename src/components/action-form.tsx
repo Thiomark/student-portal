@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useActionState, useContext, useEffect, type ReactNode } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef, type ReactNode } from "react";
 
 export type FormState =
   | { ok: true; message?: string; redirectTo?: string }
@@ -12,6 +12,10 @@ const FieldErrors = createContext<Record<string, string[] | undefined>>({});
 
 // Progressive-enhancement form around a server action: works without JS,
 // shows field errors and a pending state with it.
+//
+// With JS, submission goes through onSubmit rather than <form action>: React
+// resets every field after a form action finishes, which would wipe what
+// someone typed whenever the server sends back a validation error.
 export function ActionForm({
   action,
   children,
@@ -25,17 +29,25 @@ export function ActionForm({
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo) router.push(state.redirectTo);
-  }, [state, router]);
+    if (state?.ok && resetOnSuccess) formRef.current?.reset();
+  }, [state, router, resetOnSuccess]);
 
   return (
     <form
+      ref={formRef}
       action={formAction}
+      onSubmit={(event) => {
+        event.preventDefault();
+        // Include the clicked button's name/value, as a normal submit would.
+        const data = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
+        startTransition(() => formAction(data));
+      }}
       className={className}
       aria-busy={pending}
-      key={resetOnSuccess && state?.ok ? JSON.stringify(state) : undefined}
     >
       <FieldErrors value={state && !state.ok ? (state.fieldErrors ?? {}) : {}}>
         <fieldset disabled={pending} className="contents">
