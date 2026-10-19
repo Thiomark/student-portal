@@ -48,7 +48,14 @@ pnpm build
 
 ## Deploying
 
-The app suits Vercel plus Neon. Set the variables from `.env.example`. Run
-`pnpm db:migrate` against the production database before each deploy that
-includes a new migration. Each school adds its own Whaple key under
-**Settings → WhatsApp and email**.
+The app is set up for Vercel plus Neon.
+
+1. In the Vercel project, open **Storage → Connect Database → Neon**. This
+   sets `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, and gives every preview
+   deployment its own database branch.
+2. Set the rest of `.env.example`, chiefly the Clerk keys.
+3. Deploy. Builds run `pnpm vercel-build`, which applies new migrations
+   (over the unpooled connection) before `next build`, so there's no manual
+   migration step.
+
+Each school adds its own Whaple key under **Settings → WhatsApp and email**.
