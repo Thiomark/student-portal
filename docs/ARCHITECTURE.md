@@ -46,7 +46,10 @@ users (one per Clerk identity)
   leak.
 - **Parents** are linked automatically when the school has their email or
   cellphone on file and Clerk has verified the same one at sign-in. A parent
-  with children at two schools sees both in `/portal`.
+  with children at two schools sees both in `/portal`. Their actions there
+  (`src/server/portal.ts`) are always looked up through
+  `guardians.user_id = <them>`. They're logged with the actor role
+  `guardian`.
 
 ## Parents, guardians and contact details
 

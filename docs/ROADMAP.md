@@ -35,8 +35,9 @@ phase is meant to be usable on its own.
   stay open with the learner.
 - ~~**CSV import**~~: done. Learners and parents from a spreadsheet, with a
   preview, re-import updates in place, and siblings share parents.
-- **Parent portal actions**: confirm meetings, give trip consent, update
-  contact details (as a request staff approve).
+- ~~**Parent portal actions**~~: done. Parents confirm or decline meetings
+  and give trip consent. Next: contact-detail change requests that staff
+  approve.
 - Move more modules to the offline outbox (incidents, trip payments), reusing
   `src/lib/offline/*` and `/api/s/[school]/sync`.
 

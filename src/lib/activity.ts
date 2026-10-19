@@ -16,18 +16,29 @@ export type ActivityInput = {
   deviceId?: string | null;
 };
 
+export type Actor = { userId: string; name: string | null; role: string };
+
 // Call after the write has committed. Logging never fails the user's action;
 // a lost log line is reported to the server log instead.
 export async function recordActivity(ctx: SchoolContext, input: ActivityInput): Promise<void> {
+  await recordActivityAs(
+    { userId: ctx.user.id, name: ctx.user.name ?? ctx.user.email, role: ctx.membership.role },
+    ctx.school.id,
+    input,
+  );
+}
+
+// For actors without a school membership, e.g. a parent in the portal.
+export async function recordActivityAs(actor: Actor, schoolId: string, input: ActivityInput): Promise<void> {
   try {
     await getDb()
       .insert(schema.activityEvents)
       .values({
         id: uuidv7(),
-        schoolId: ctx.school.id,
-        actorUserId: ctx.user.id,
-        actorName: ctx.user.name ?? ctx.user.email,
-        actorRole: ctx.membership.role,
+        schoolId,
+        actorUserId: actor.userId,
+        actorName: actor.name,
+        actorRole: actor.role,
         action: input.action,
         area: input.action.split(".")[0],
         entityType: input.entityType,
