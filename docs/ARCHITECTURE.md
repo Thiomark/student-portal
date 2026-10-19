@@ -94,15 +94,21 @@ field-level `changes`. The table has no foreign keys, so the history outlives
 deleted rows. Contact details, ID numbers and medical notes are never written
 to the log.
 
-## Offline-first textbook desk
+## Offline-first textbook desk and attendance register
 
-Issuing and returning books is the busiest, most connection-sensitive task, so
-it works fully offline:
+The textbook desk and the attendance register are the busiest,
+most connection-sensitive tasks. A teacher takes the register in a classroom
+with no WiFi. Both work fully offline from the same device store
+(`src/lib/offline/*`, `src/components/offline-shell.tsx`) and the same sync
+endpoint:
 
 1. `/s/<slug>/desk` HTML holds no learner data. `proxy.ts` marks it
    `x-offline-shell`, and `public/sw.js` caches it and its scripts.
-2. On load, the desk pulls a snapshot into IndexedDB (`GET /api/s/<slug>/sync`):
-   active learners, all book copies and open loans. After that it pulls only
+2. On load, the page pulls a snapshot into IndexedDB
+   (`GET /api/s/<slug>/sync`):
+   - active learners and the current year's classes;
+   - book copies and open loans, if the person can use the desk;
+   - the last 14 days of registers, if they can take registers. After that it pulls only
    changes since a cursor. Each pull re-reads a 60-second window before the
    cursor so transactions that commit late aren't missed.
 3. Each issue or return is written locally and queued in an outbox with a
@@ -112,8 +118,14 @@ it works fully offline:
    its own transaction and is recorded in `sync_mutations`, so a resend after
    a lost response is a no-op (`duplicate`).
 5. Conflicts are rejected, not merged. One example: the same book issued on two
-   offline devices. A unique index allows one open loan per copy. The desk
+   offline devices. A unique index allows one open loan per copy. The page
    shows rejected items for a person to resolve, then re-pulls a full snapshot.
+6. Registers are the exception: one per class per day. Retaking one keeps the
+   first register and overwrites the marks, so the latest correction wins.
+   Registers can't be for a future date or more than 30 days old.
+7. Parents of absent learners are told only when the register is for today.
+   Each absence is told once (`guardians_notified_at`), however many times
+   the register is corrected.
 
 Everything else uses ordinary server-rendered pages, with Next's
 `experimental.useOffline`. That flag holds navigations and form submits while

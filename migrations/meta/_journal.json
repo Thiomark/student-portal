@@ -15,6 +15,13 @@
       "when": 1792397382953,
       "tag": "0001_message_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792397789661,
+      "tag": "0002_attendance",
+      "breakpoints": true
     }
   ]
 }

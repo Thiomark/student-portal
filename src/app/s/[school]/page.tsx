@@ -3,7 +3,9 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { getDb, schema } from "@/db/client";
 import { can, getSchoolContext } from "@/lib/auth/context";
+import { schoolToday } from "@/lib/format";
 import type { Capability } from "@/lib/permissions";
+import { getCurrentYear } from "@/server/school-data";
 
 type Tile = { label: string; value: number; href: string; tone?: "warn" };
 
@@ -16,10 +18,54 @@ export default async function OverviewPage({ params }: PageProps<"/s/[school]">)
   const base = `/s/${slug}`;
   const now = new Date();
   const inAWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const today = now.toISOString().slice(0, 10);
 
   // Each tile only runs its query when the viewer may see that area.
+  // The school's date, not the server's (UTC) one.
+  const schoolDay = schoolToday(ctx.school.timezone, now);
   const tiles: [Capability, () => Promise<Tile>][] = [
+    [
+      "attendance.view",
+      async () => {
+        const year = await getCurrentYear(schoolId);
+        return {
+          label: "Registers not taken today",
+          href: `${base}/attendance/today`,
+          tone: "warn",
+          value: await one(
+            db
+              .select({ n: count() })
+              .from(s.classGroups)
+              .where(
+                and(
+                  eq(s.classGroups.schoolId, schoolId),
+                  year ? eq(s.classGroups.academicYearId, year.id) : sql`false`,
+                  isNull(s.classGroups.deletedAt),
+                  sql`not exists (select 1 from ${s.attendanceRegisters} ar where ar.class_group_id = "class_groups"."id" and ar.date = ${schoolDay})`,
+                ),
+              ),
+          ),
+        };
+      },
+    ],
+    [
+      "attendance.view",
+      async () => ({
+        label: "Absent today",
+        href: `${base}/attendance/today`,
+        value: await one(
+          db
+            .select({ n: count() })
+            .from(s.attendanceRecords)
+            .where(
+              and(
+                eq(s.attendanceRecords.schoolId, schoolId),
+                eq(s.attendanceRecords.date, schoolDay),
+                eq(s.attendanceRecords.status, "absent"),
+              ),
+            ),
+        ),
+      }),
+    ],
     [
       "learners.view",
       async () => ({
@@ -81,7 +127,7 @@ export default async function OverviewPage({ params }: PageProps<"/s/[school]">)
               and(
                 eq(s.textbookLoans.schoolId, schoolId),
                 isNull(s.textbookLoans.returnedAt),
-                lt(s.textbookLoans.dueOn, today),
+                lt(s.textbookLoans.dueOn, schoolDay),
               ),
             ),
         ),
@@ -172,8 +218,13 @@ export default async function OverviewPage({ params }: PageProps<"/s/[school]">)
         ))}
       </div>
       <div className="mt-6 flex flex-wrap gap-2">
+        {can(ctx, "attendance.take") ? (
+          <a href={`${base}/attendance`} className="btn-primary">
+            Take the register
+          </a>
+        ) : null}
         {can(ctx, "textbooks.issue") ? (
-          <a href={`${base}/desk`} className="btn-primary">
+          <a href={`${base}/desk`} className="btn-secondary">
             Open textbook desk
           </a>
         ) : null}

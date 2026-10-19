@@ -1,11 +1,11 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactList } from "@/components/contacts";
 import { Badge, DefinitionList, NoAccess, PageHeader, Section } from "@/components/ui";
 import { getDb, schema } from "@/db/client";
 import { can, getSchoolContext } from "@/lib/auth/context";
-import { formatDate, formatDateTime, fullName } from "@/lib/format";
+import { formatDate, formatDateTime, fullName, schoolToday, shiftDate } from "@/lib/format";
 import { isUuid } from "@/lib/ids";
 import { RELATIONSHIP_LABELS } from "@/lib/validation/people";
 import { getLearner, listContacts, listLearnerGuardians } from "@/server/school-data";
@@ -25,7 +25,8 @@ export default async function LearnerPage({ params }: PageProps<"/s/[school]/lea
   const { learner } = row;
   const db = getDb();
 
-  const [links, loans, incidents, meetings] = await Promise.all([
+  const since = shiftDate(schoolToday(tz), -90);
+  const [links, loans, incidents, meetings, attendance] = await Promise.all([
     can(ctx, "guardians.view") ? listLearnerGuardians(schoolId, learnerId) : Promise.resolve([]),
     can(ctx, "textbooks.view")
       ? db
@@ -73,6 +74,23 @@ export default async function LearnerPage({ params }: PageProps<"/s/[school]/lea
           )
           .orderBy(desc(schema.meetings.scheduledAt))
           .limit(20)
+      : Promise.resolve([]),
+    can(ctx, "attendance.view")
+      ? db
+          .select({
+            date: schema.attendanceRecords.date,
+            status: schema.attendanceRecords.status,
+            reason: schema.attendanceRecords.reason,
+          })
+          .from(schema.attendanceRecords)
+          .where(
+            and(
+              eq(schema.attendanceRecords.schoolId, schoolId),
+              eq(schema.attendanceRecords.learnerId, learnerId),
+              gte(schema.attendanceRecords.date, since),
+            ),
+          )
+          .orderBy(desc(schema.attendanceRecords.date))
       : Promise.resolve([]),
   ]);
   const contacts = await listContacts(
@@ -159,6 +177,36 @@ export default async function LearnerPage({ params }: PageProps<"/s/[school]/lea
                 </li>
               ))}
             </ul>
+          )}
+        </Section>
+      ) : null}
+
+      {can(ctx, "attendance.view") ? (
+        <Section title="Attendance (last 90 days)">
+          {attendance.length === 0 ? (
+            <p className="text-sm text-slate-600">No registers recorded.</p>
+          ) : (
+            <>
+              <p className="mb-2 text-sm">
+                {attendance.filter((a) => a.status === "present").length} present ·{" "}
+                {attendance.filter((a) => a.status === "absent").length} absent ·{" "}
+                {attendance.filter((a) => a.status === "late").length} late ·{" "}
+                {attendance.filter((a) => a.status === "excused").length} excused, out of {attendance.length} school
+                days recorded
+              </p>
+              <ul className="space-y-1 text-sm">
+                {attendance
+                  .filter((a) => a.status !== "present")
+                  .slice(0, 20)
+                  .map((a) => (
+                    <li key={a.date}>
+                      {formatDate(`${a.date}T12:00:00Z`, tz)}{" "}
+                      <Badge tone={a.status === "absent" ? "red" : a.status === "late" ? "amber" : "gray"}>{a.status}</Badge>
+                      {a.reason ? <span className="text-slate-600"> {a.reason}</span> : null}
+                    </li>
+                  ))}
+              </ul>
+            </>
           )}
         </Section>
       ) : null}

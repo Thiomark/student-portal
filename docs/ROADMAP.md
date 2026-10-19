@@ -21,8 +21,9 @@ phase is meant to be usable on its own.
 
 ## Phase 2: next up
 
-- **Attendance**: daily register per class, offline like the desk. Absence
-  alerts to parents via the existing notify pipeline.
+- ~~**Attendance**~~: done. Daily register per class, offline, same-day
+  absence notices, office view, learner history. Next: per-period
+  registers for high schools, and term reports.
 - ~~**Message delivery queue**~~: done. Background sending, retries,
   WhatsApp delivered/read tracking.
 - **WhatsApp replies**: let staff log a parent's reply (confirm/decline a

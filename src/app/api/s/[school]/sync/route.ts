@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
-import { can, getSchoolContextForApi } from "@/lib/auth/context";
+import { getSchoolContextForApi } from "@/lib/auth/context";
 import type { PushResponse } from "@/lib/offline/protocol";
-import { pull, push, pushSchema } from "@/server/desk-sync";
+import { pull, push, pushSchema, syncScope } from "@/server/sync";
 
-// Offline desk sync. GET pulls changes since a cursor; POST pushes queued
-// desk actions. Both need textbooks.issue in the school.
+// Offline sync for the textbook desk and attendance registers. GET pulls
+// changes since a cursor; POST pushes queued changes. Needs textbooks.issue or
+// attendance.take; each pushed change is checked against its own capability.
 
 async function authorise(slug: string) {
   const result = await getSchoolContextForApi(slug);
   if ("status" in result) {
     return { error: NextResponse.json({ error: result.status === 401 ? "Signed out" : "Not found" }, { status: result.status }) };
   }
-  if (!can(result.ctx, "textbooks.issue")) {
+  const scope = syncScope(result.ctx);
+  if (!scope.textbooks && !scope.attendance) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
   return { ctx: result.ctx };

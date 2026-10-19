@@ -9,7 +9,7 @@ process.env.DATABASE_DRIVER = "pg";
 
 // Imported after the env is set: the db client reads it on first use.
 const { getDb, schema } = await import("@/db/client");
-const { pull, push } = await import("./desk-sync");
+const { pull, push } = await import("./index");
 const { eq } = await import("drizzle-orm");
 
 describe.skipIf(!url)("textbook desk sync", () => {

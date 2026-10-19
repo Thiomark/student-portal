@@ -11,6 +11,7 @@ export const SCHOOL_NAV: {
 }[] = [
   { href: "", label: "Overview" },
   { href: "/desk", label: "Textbook desk", capability: "textbooks.issue", fullLoad: true },
+  { href: "/attendance", label: "Attendance", capability: ["attendance.take", "attendance.view"], fullLoad: true },
   { href: "/learners", label: "Learners", capability: "learners.view" },
   { href: "/guardians", label: "Parents & guardians", capability: "guardians.view" },
   { href: "/classes", label: "Classes", capability: "classes.manage" },

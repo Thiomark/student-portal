@@ -16,7 +16,7 @@ const isPublic = createRouteMatcher([
 // per request from their membership (lib/auth/context), not here.
 // Pages whose HTML carries no learner data and may be kept on the device for
 // offline use (public/sw.js only caches responses marked like this).
-const OFFLINE_SHELL = /^\/s\/[^/]+\/desk\/?$/;
+const OFFLINE_SHELL = /^\/s\/[^/]+\/(desk|attendance)\/?$/;
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublic(request)) await auth.protect();
